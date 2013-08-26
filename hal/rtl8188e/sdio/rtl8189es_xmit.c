@@ -24,6 +24,7 @@
 #include <drv_types.h>
 #include <sdio_ops.h>
 #include <rtl8188e_hal.h>
+#include <linux/kthread.h>
 
 static void fill_txdesc_sectype(struct pkt_attrib *pattrib, PTXDESC ptxdesc)
 {
@@ -1481,7 +1482,7 @@ s32 rtl8188es_init_xmit_priv(PADAPTER padapter)
 	_rtw_init_sema(&pHalData->SdioXmitSema, 0);
 	_rtw_init_sema(&pHalData->SdioXmitTerminateSema, 0);
 #ifdef PLATFORM_LINUX
-	pHalData->SdioXmitThread = kernel_thread(rtl8188es_xmit_thread, padapter, CLONE_FS|CLONE_FILES);
+	pHalData->SdioXmitThread = kthread_run(rtl8188es_xmit_thread, padapter, "rtl8188es_xmit_thread");
 	if (pHalData->SdioXmitThread < 0) {
 		RT_TRACE(_module_hal_xmit_c_, _drv_err_, ("%s: start rtl8188es_xmit_thread FAIL!!\n", __FUNCTION__));
 		return _FAIL;

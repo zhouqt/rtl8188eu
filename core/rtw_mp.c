@@ -20,6 +20,7 @@
 #define _RTW_MP_C_
 
 #include <drv_types.h>
+#include <linux/kthread.h>
 
 #ifdef PLATFORM_FREEBSD
 #include <sys/unistd.h>		/* for RFHIGHPID */
@@ -1219,7 +1220,7 @@ void SetPacketTx(PADAPTER padapter)
 
 	//3 6. start thread
 #ifdef PLATFORM_LINUX
-	pmp_priv->tx.PktTxThread = kernel_thread(mp_xmit_packet_thread, pmp_priv, CLONE_FS|CLONE_FILES);
+	pmp_priv->tx.PktTxThread = kthread_run(mp_xmit_packet_thread, pmp_priv, "mp_xmit_packet_thread");
 #endif
 #ifdef PLATFORM_FREEBSD
 {

@@ -34,6 +34,7 @@
 #include <hal_intf.h>
 #include <rtw_ioctl.h>
 #include <rtw_version.h>
+#include <linux/kthread.h>
 
 #ifdef CONFIG_USB_HCI
 #include <usb_osintf.h>
@@ -316,16 +317,17 @@ void rtw_proc_init_one(struct net_device *dev)
 #if(LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
 		rtw_proc=create_proc_entry(rtw_proc_name, S_IFDIR, proc_net);
 #else
-		rtw_proc=create_proc_entry(rtw_proc_name, S_IFDIR, init_net.proc_net);
+		rtw_proc=proc_create(rtw_proc_name, S_IFDIR, init_net.proc_net, NULL);
 #endif
 		if (rtw_proc == NULL) {
 			DBG_871X(KERN_ERR "Unable to create rtw_proc directory\n");
 			return;
 		}
 
-		entry = create_proc_read_entry("ver_info", S_IFREG | S_IRUGO, rtw_proc, proc_get_drv_version, dev);				   
+		entry = proc_create_data("ver_info", S_IFREG | S_IRUGO, rtw_proc,
+					 (const struct file_operations *)proc_get_drv_version, dev);				   
 		if (!entry) {
-			DBG_871X("Unable to create_proc_read_entry!\n"); 
+			DBG_871X("Unable to proc_create_data!\n"); 
 			return;
 		}
 	}
@@ -334,9 +336,9 @@ void rtw_proc_init_one(struct net_device *dev)
 
 	if(padapter->dir_dev == NULL)
 	{
-		padapter->dir_dev = create_proc_entry(dev->name, 
+		padapter->dir_dev = proc_create(dev->name, 
 					  S_IFDIR | S_IRUGO | S_IXUGO, 
-					  rtw_proc);
+					  rtw_proc, NULL);
 
 		dir_dev = padapter->dir_dev;
 
@@ -365,206 +367,206 @@ void rtw_proc_init_one(struct net_device *dev)
 
 	rtw_proc_cnt++;
 
-	entry = create_proc_read_entry("write_reg", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_write_reg, dev);				   
+	entry = proc_create_data("write_reg", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_write_reg, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
-	entry->write_proc = proc_set_write_reg;
+	//entry->write_proc = proc_set_write_reg;
 
-	entry = create_proc_read_entry("read_reg", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_read_reg, dev);				   
+	entry = proc_create_data("read_reg", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_read_reg, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
-	entry->write_proc = proc_set_read_reg;
+	//entry->write_proc = proc_set_read_reg;
 
 	
-	entry = create_proc_read_entry("fwstate", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_fwstate, dev);				   
+	entry = proc_create_data("fwstate", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_fwstate, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
 
-	entry = create_proc_read_entry("sec_info", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_sec_info, dev);				   
+	entry = proc_create_data("sec_info", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_sec_info, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
 
-	entry = create_proc_read_entry("mlmext_state", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_mlmext_state, dev);				   
+	entry = proc_create_data("mlmext_state", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_mlmext_state, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
 
-	entry = create_proc_read_entry("qos_option", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_qos_option, dev);				   
+	entry = proc_create_data("qos_option", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_qos_option, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("ht_option", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_ht_option, dev);				   
+	entry = proc_create_data("ht_option", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_ht_option, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("rf_info", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_rf_info, dev);				   
+	entry = proc_create_data("rf_info", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_rf_info, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-	
-	entry = create_proc_read_entry("ap_info", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_ap_info, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-
-	entry = create_proc_read_entry("adapter_state", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_adapter_state, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-
-	entry = create_proc_read_entry("trx_info", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_trx_info, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-
-	entry = create_proc_read_entry("mac_reg_dump1", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_mac_reg_dump1, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-
-	entry = create_proc_read_entry("mac_reg_dump2", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_mac_reg_dump2, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
-		return;
-	}
-
-	entry = create_proc_read_entry("mac_reg_dump3", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_mac_reg_dump3, dev);				   
-	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 	
-	entry = create_proc_read_entry("bb_reg_dump1", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_bb_reg_dump1, dev);	   
+	entry = proc_create_data("ap_info", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_ap_info, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("bb_reg_dump2", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_bb_reg_dump2, dev);	   
+	entry = proc_create_data("adapter_state", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_adapter_state, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("bb_reg_dump3", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_bb_reg_dump3, dev);	   
+	entry = proc_create_data("trx_info", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_trx_info, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("rf_reg_dump1", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_rf_reg_dump1, dev);
+	entry = proc_create_data("mac_reg_dump1", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_mac_reg_dump1, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 
-	entry = create_proc_read_entry("rf_reg_dump2", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_rf_reg_dump2, dev);
+	entry = proc_create_data("mac_reg_dump2", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_mac_reg_dump2, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+
+	entry = proc_create_data("mac_reg_dump3", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_mac_reg_dump3, dev);				   
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+	
+	entry = proc_create_data("bb_reg_dump1", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_bb_reg_dump1, dev);	   
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+
+	entry = proc_create_data("bb_reg_dump2", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_bb_reg_dump2, dev);	   
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+
+	entry = proc_create_data("bb_reg_dump3", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_bb_reg_dump3, dev);	   
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+
+	entry = proc_create_data("rf_reg_dump1", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_rf_reg_dump1, dev);
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
+		return;
+	}
+
+	entry = proc_create_data("rf_reg_dump2", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_rf_reg_dump2, dev);
+	if (!entry) {
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 	
 	rtw_hal_get_hwreg(padapter, HW_VAR_RF_TYPE, (u8 *)(&rf_type));	
 	if((RF_1T2R == rf_type) ||(RF_1T1R ==rf_type ))	{
-		entry = create_proc_read_entry("rf_reg_dump3", S_IFREG | S_IRUGO,
-					   dir_dev, proc_get_rf_reg_dump3, dev);
+		entry = proc_create_data("rf_reg_dump3", S_IFREG | S_IRUGO,
+					   dir_dev, (const struct file_operations *)proc_get_rf_reg_dump3, dev);
 		if (!entry) {
-			DBG_871X("Unable to create_proc_read_entry!\n"); 
+			DBG_871X("Unable to proc_create_data!\n"); 
 			return;
 		}
 
-		entry = create_proc_read_entry("rf_reg_dump4", S_IFREG | S_IRUGO,
-					   dir_dev, proc_get_rf_reg_dump4, dev);
+		entry = proc_create_data("rf_reg_dump4", S_IFREG | S_IRUGO,
+					   dir_dev, (const struct file_operations *)proc_get_rf_reg_dump4, dev);
 		if (!entry) {
-			DBG_871X("Unable to create_proc_read_entry!\n"); 
+			DBG_871X("Unable to proc_create_data!\n"); 
 			return;
 		}
 	}
 	
 #ifdef CONFIG_AP_MODE
 
-	entry = create_proc_read_entry("all_sta_info", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_all_sta_info, dev);				   
+	entry = proc_create_data("all_sta_info", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_all_sta_info, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 #endif
 
 #ifdef DBG_MEMORY_LEAK
-	entry = create_proc_read_entry("_malloc_cnt", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_malloc_cnt, dev);				   
+	entry = proc_create_data("_malloc_cnt", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_malloc_cnt, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 #endif
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
-	entry = create_proc_read_entry("best_channel", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_best_channel, dev);				   
+	entry = proc_create_data("best_channel", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_best_channel, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
 #endif
 
-	entry = create_proc_read_entry("rx_signal", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_rx_signal, dev);				   
+	entry = proc_create_data("rx_signal", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_rx_signal, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
-	entry->write_proc = proc_set_rx_signal;
+	//entry->write_proc = proc_set_rx_signal;
 
 
-	entry = create_proc_read_entry("rssi_disp", S_IFREG | S_IRUGO,
-				   dir_dev, proc_get_rssi_disp, dev);				   
+	entry = proc_create_data("rssi_disp", S_IFREG | S_IRUGO,
+				   dir_dev, (const struct file_operations *)proc_get_rssi_disp, dev);				   
 	if (!entry) {
-		DBG_871X("Unable to create_proc_read_entry!\n"); 
+		DBG_871X("Unable to proc_create_data!\n"); 
 		return;
 	}
-	entry->write_proc = proc_set_rssi_disp;
+	//entry->write_proc = proc_set_rssi_disp;
 
 }
 
@@ -978,18 +980,18 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 
 	RT_TRACE(_module_os_intfs_c_,_drv_info_,("+rtw_start_drv_threads\n"));
 #ifdef CONFIG_XMIT_THREAD_MODE
-	padapter->xmitThread = kernel_thread(rtw_xmit_thread, padapter, CLONE_FS|CLONE_FILES);
+	padapter->xmitThread = kthread_run(rtw_xmit_thread, padapter, "rtw_xmit_thread");
 	if(padapter->xmitThread < 0)
 		_status = _FAIL;
 #endif
 
 #ifdef CONFIG_RECV_THREAD_MODE
-	padapter->recvThread = kernel_thread(rtw_recv_thread, padapter, CLONE_FS|CLONE_FILES);
+	padapter->recvThread = kthread_run(rtw_recv_thread, padapter, "rtw_recv_thread");
 	if(padapter->recvThread < 0)
 		_status = _FAIL;	
 #endif
 
-	padapter->cmdThread = kernel_thread(rtw_cmd_thread, padapter, CLONE_FS|CLONE_FILES);
+	padapter->cmdThread = kthread_run(rtw_cmd_thread, padapter, "rtw_cmd_thread");
 	if(padapter->cmdThread < 0)
 		_status = _FAIL;
 	else
@@ -997,7 +999,7 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 		
 
 #ifdef CONFIG_EVENT_THREAD_MODE
-	padapter->evtThread = kernel_thread(event_thread, padapter, CLONE_FS|CLONE_FILES);
+	padapter->evtThread = kthread_run(event_thread, padapter, "event_thread");
 	if(padapter->evtThread < 0)
 		_status = _FAIL;		
 #endif
